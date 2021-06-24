@@ -1,13 +1,13 @@
 import numpy as np
 
-def sigmoid(Z:np.matrix):
+def sigmoid(Z:np.array):
     """
     Z ~ The compact form for the weighted sum (W @ L(n-1) + b(n))
     """
     Z = 1 / (1 + np.exp(-Z))
     return Z
 
-def d_sigmoid(Z:np.matrix):
+def d_sigmoid(Z:np.array):
     """
     Z ~ The compact form for the weighted sum (W @ L(n-1) + b(n))
     """
@@ -26,20 +26,23 @@ class Layer:
         weights     ~ a (N(L) x N(L-1)) matrix of weights, where N(L) is the number of neurons in layer L.
         biases      ~ a N(L) vector of float64s.
         """
+
         self.neurons = neurons
+        prev_layer_neurons = len(prevalues)
+        xavier_multiplier = np.sqrt(1/(prev_layer_neurons + neurons))
 
         if weights == None:
-            weights = np.random.rand(neurons, len(prevalues)).astype(np.float64)
+            weights = np.random.randn(neurons, prev_layer_neurons).astype(np.float64) * xavier_multiplier
         
         if biases == None:
-            biases = np.random.rand(neurons).astype(np.float64)
+            biases = np.zeros(shape=(neurons, 1))
         
         self.values = sigma((weights @ prevalues) + biases)
         self.weights = weights
         self.biases = biases
         self.sigma = sigma
         self.dsigma = dsigma
-
+    
 class NeuralNetwork:
     def __init__(self, layers:list):
         """

@@ -14,10 +14,12 @@ def test_dsigmoid(M:np.matrix):
     print(network.d_sigmoid(M))
 
 def test_imagedata_parsing(filepath):
-    print(DataParser.parse_training_image_file(filepath))
+    imgdata = DataParser.parse_training_image_file(filepath)
+    print(imgdata.images)
 
 def test_labeldata_parsing(filepath):
-    print(DataParser.parse_training_label_file(filepath))
+    labeldata = DataParser.parse_training_label_file(filepath)
+    print(labeldata.labels)
 
 if __name__ == '__main__':
     # test_matrix = np.matrix(np.linspace(start=1, stop=5, num=5, dtype=np.float64))
@@ -25,5 +27,4 @@ if __name__ == '__main__':
     # test_dsigmoid(test_matrix)
     # test_imagedata_parsing('data/train-images.idx3-ubyte')
     # test_labeldata_parsing('data/train-labels.idx1-ubyte')
-    
     pass

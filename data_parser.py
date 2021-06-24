@@ -1,6 +1,20 @@
 import numpy as np
 from collections import OrderedDict
 
+class ImageData:
+    def __init__(self, headers, images):
+        self.magic_number   = headers['magic_number']
+        self.num_images     = headers['number_of_images']
+        self.img_width      = headers['width']
+        self.img_height     = headers['height']
+        self.images         = images
+
+class LabelData:
+    def __init__(self, headers, labels):
+        self.magic_number   = headers['magic_number']
+        self.num_labels     = headers['number_of_labels']
+        self.labels         = labels
+    
 class DataParser:
 
     @staticmethod
@@ -50,7 +64,7 @@ class DataParser:
             imgdata[:, :, 0] = imgdata[:, :, 1] = imgdata[:, :, 2] = buf_img
             images[i, :] = imgdata
         
-        return (headers, images)
+        return ImageData(headers, images)
 
     @staticmethod
     def parse_training_label_file(filepath):
@@ -76,5 +90,5 @@ class DataParser:
         nubyte = nubyte.newbyteorder('>')
 
         labels = np.frombuffer(file.read(num_labels), dtype=nubyte)
-        return headers, labels
+        return LabelData(headers, labels)
 

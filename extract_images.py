@@ -3,13 +3,13 @@ from PIL import Image
 from data_parser import DataParser
 
 def extract_images(imgdata_file, output_dir):
-    headers, images = DataParser.parse_training_image_file(imgdata_file)
+    imgdata = DataParser.parse_training_image_file(imgdata_file)
 
-    print('Extracting {0} images...'.format(headers['number_of_images']))
-    print('Image size: {0}x{1}'.format(headers['width'], headers['height']))
+    print('Extracting {0} images...'.format(imgdata.num_images))
+    print('Image size: {0}x{1}'.format(imgdata.img_width, imgdata.img_height))
 
-    for i in range(len(images)):
-        img = Image.fromarray(images[i])
+    for i in range(len(imgdata.images)):
+        img = Image.fromarray(imgdata.images[i])
         name = str(i) + '.png'
 
         print('Saving image {0}...'.format(name))

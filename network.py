@@ -37,20 +37,21 @@ class InputLayer(Layer):
         super().__init__(neurons, sigma=sigma, dsigma=dsigma)
     
     def update_values(self, values: np.array):
-        self.values = self.sigma(values)
+        self.values = values
         self.Z = values
     
 class WeightedLayer(Layer):
     def __init__(self, neurons: int, prevLayer:Layer, sigma=sigmoid, dsigma=d_sigmoid):
         super().__init__(neurons, sigma=sigma, dsigma=dsigma)
         
-        L0 = len(prevLayer.values)
+        L0 = prevLayer.neurons
         L1 = neurons
         xavier_multiplier = np.sqrt(1 / (L0 + L1))
 
         self.weights = np.random.randn(L0, L1) * xavier_multiplier
         self.weights_T = self.weights.T
-        self.bias = np.zeros(L1).T
+
+        self.bias = np.zeros(L1)
 
         self.partial_weights = np.zeros_like(self.weights)
         self.partial_bias = np.zeros_like(self.bias)
@@ -81,11 +82,11 @@ class NeuralNetwork:
             self.layers.append(layer)
         
         # X is the unscaled input data vector
-        self.X = None
+        self.X = np.zeros(input_layer.neurons)
 
         # Y is the expected output vector
-        self.Y = None
-    
+        self.Y = np.zeros(self.layers[-1].neurons)
+
     def load_data(self, X: np.array, Y: np.array):
         assert(self.layers[0].neurons  == len(X))
         assert(self.layers[-1].neurons == len(Y))
@@ -94,6 +95,7 @@ class NeuralNetwork:
 
         self.layers[0].update_values(X)
         self.feed_forward()
+        self.backpropogate()
         
     def cost(self):
         last_layer = self.layers[-1]
@@ -106,4 +108,21 @@ class NeuralNetwork:
             self.layers[l].update_values(self.layers[l - 1])
     
     def backpropogate(self):
-        pass
+        ll = self.layers[-1] # Last layer
+        
+        # Delta of last layer
+        delta = 2 * (ll.values - self.Y) * ll.dsigma(ll.Z)
+        ll.partial_bias = delta
+        ll.partial_weights = np.outer(self.layers[-2].values, ll.partial_bias)
+
+        L = len(self.layers) - 2
+        for i in range(L, 0, -1):
+            pl = self.layers[i - 1]
+            nl = self.layers[i + 1]
+            l = self.layers[i]
+
+            delta = (nl.weights @ delta) * l.dsigma(l.Z)
+            l.partial_bias = delta
+            l.partial_weights = np.outer(pl.values, l.partial_bias)
+
+

@@ -94,9 +94,11 @@ class NeuralNetwork:
 
         self.layers[0].update_values(X)
         self.feed_forward()
+        
     def cost(self):
         last_layer = self.layers[-1]
         V = (last_layer.values - self.Y).flatten()
+
         return np.dot(V, V)
     
     def feed_forward(self):

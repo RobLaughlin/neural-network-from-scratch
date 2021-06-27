@@ -21,7 +21,7 @@ if __name__ == '__main__':
     values = format_image_data(imgdata, 0, scaledown)
     layers = np.array([len(values), 28, 28, 10])
 
-    y= np.zeros(shape=(10, 1))
+    y= np.zeros(10)
     y[4] = 1
 
     network = NeuralNetwork(layers=layers)

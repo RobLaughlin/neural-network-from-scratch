@@ -1,6 +1,7 @@
-from abc import ABC, abstractclassmethod
+from abc import ABC
 import numpy as np
 import random
+import pickle
 
 def sigmoid(Z: np.array):
     """
@@ -72,14 +73,23 @@ class WeightedLayer(Layer):
         self.values = self.sigma(self.Z)
     
     def reset_partials(self):
+        """
+        Reset all partials back to zeros.
+        """
         self.partial_weights = np.zeros_like(self.weights)
         self.partial_bias = np.zeros_like(self.bias)
     
-    def update_partials(self, pWeights: np.matrix, pBias: np.array):
+    def sum_partials(self, pWeights: np.matrix, pBias: np.array):
+        """
+        Sum up the partial derivatives of each layer to use for the gradient step.
+        """
         self.partial_weights = self.partial_weights + pWeights
         self.partial_bias = (self.partial_bias + pBias).flatten()
     
     def gradient_step(self, eta, mini_batch_size):
+        """
+        Updates the weights and biases according to the respective gradient sums.
+        """
         gradient_scalar = eta / mini_batch_size
         self.weights -= (gradient_scalar * self.partial_weights)
         self.weights_T = self.weights.T
@@ -92,17 +102,25 @@ class NeuralNetwork:
         layers is an array of 3-tuples, where
         each tuple represents (number of neurons in respective index layer, sigma function, deriviative of respective sigma function)
         """
-
+        
         # Must have at least 1 input and 1 output layer in the network
         assert(len(layers) >= 2)
 
         self.layers = list()
 
-        input_layer = InputLayer(layers[0][0], layers[0][1], layers[0][2])
+        input_neurons = layers[0][0]
+        input_sigma = layers[0][1]
+        input_dsigma = layers[0][1]
+        input_layer = InputLayer(input_neurons, input_sigma, input_dsigma)
         self.layers.append(input_layer)
 
         for l in range(1, len(layers)):
-            layer = WeightedLayer(layers[l][0], self.layers[l - 1], layers[l][1], layers[l][2])
+            num_neurons = layers[l][0]
+            prevLayer = self.layers[l - 1]
+            sigma = layers[l][1]
+            dsigma = layers[l][2]
+
+            layer = WeightedLayer(num_neurons, prevLayer, sigma, dsigma)
             self.layers.append(layer)
 
         # X is the unscaled input data vector
@@ -111,16 +129,19 @@ class NeuralNetwork:
         # Y is the expected output vector
         self.Y = np.zeros(self.layers[-1].neurons)
 
-    def load_data(self, X: np.array, Y: np.array):
+    def load_data(self, X: np.array, Y: np.array = None):
         assert(self.layers[0].neurons  == len(X))
-        assert(self.layers[-1].neurons == len(Y))
-        self.X = X
-        self.Y = Y
 
+        # Y is optional if we are not training the data.
+        if Y is not None:
+            assert(self.layers[-1].neurons == len(Y))
+            self.Y = Y
+        
+        self.X = X
         self.layers[0].update_values(X)
         self.feed_forward()
     
-    def SGD(self, training_data: list, test_data: list, mini_batches: int, eta, epochs: int = 10):
+    def SGD(self, training_data: list, test_data: list, mini_batches: int, eta, epochs: int = 10, save_path='./network.pkl'):
         """
         Training data is a list of size T where
         T ~ is the total number of training examples.
@@ -134,6 +155,7 @@ class NeuralNetwork:
         mini_batches    ~ The size of each mini batch
         eta             ~ The learning rate to use for gradient descent
         epochs          ~ The number of times to run through all training examples
+        save_path       ~ relative save path to save the network state after training
         """
 
         m = mini_batches
@@ -155,6 +177,20 @@ class NeuralNetwork:
             correct, tests = self.test_predictions(test_data)
             print("Epoch: {0} ~ {1}/{2} correct predictions ({3:.2f}%).".format(e, correct, tests, correct / tests * 100))
 
+            
+        print('Done training! Saving network object...')
+        NeuralNetwork.save_network_object(self, save_path)
+    
+    @staticmethod
+    def save_network_object(network, save_path: str = './network.pkl'):
+        with open(save_path, 'wb') as output:
+            pickle.dump(network, output, pickle.HIGHEST_PROTOCOL)
+    
+    @staticmethod
+    def load_network_object(load_path: str = './network.pkl'):
+        with open(load_path, 'rb') as input:
+            return pickle.load(input)
+    
     def predict(self):
         """
         Return a tuple with
@@ -206,11 +242,12 @@ class NeuralNetwork:
             self.layers[l].update_values(self.layers[l - 1])
     
     def backpropogate(self):
-        ll = self.layers[-1] # Last layer
+        # Last layer
+        ll = self.layers[-1] 
         
         # Delta of last layer
         delta = 2 * (ll.values - self.Y) * ll.dsigma(ll.Z)
-        ll.update_partials(np.outer(self.layers[-2].values, delta), delta)
+        ll.sum_partials(np.outer(self.layers[-2].values, delta), delta)
 
         L = len(self.layers) - 2
         for i in range(L, 0, -1):
@@ -219,6 +256,6 @@ class NeuralNetwork:
             l = self.layers[i]
 
             delta = (nl.weights @ delta) * l.dsigma(l.Z)
-            l.update_partials(np.outer(pl.values, delta), delta)
+            l.sum_partials(np.outer(pl.values, delta), delta)
 
 

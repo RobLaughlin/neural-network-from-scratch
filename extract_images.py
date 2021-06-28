@@ -1,6 +1,6 @@
 import os
 from PIL import Image
-from data_parser import DataParser
+from Network.DataParser.data_parser import DataParser
 
 def extract_images(imgdata_file, output_dir):
     imgdata = DataParser.parse_training_image_file(imgdata_file)

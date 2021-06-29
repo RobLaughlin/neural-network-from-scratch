@@ -34,7 +34,13 @@ class CustomCanvas(tkinter.Canvas):
     def leftclick_up(self, event):
         resized_img = self.img.resize((28, 28))
         grayscale_img = ImageOps.grayscale(resized_img)
-        brightened_img = np.array(grayscale_img, dtype=np.float64) / 255
+        brightened_img = np.array(grayscale_img)
+        brightened_img[brightened_img > 0] = 255
+
+        im = Image.fromarray(brightened_img)
+        im.save('test.png')
+
+        brightened_img = brightened_img.astype(np.float64) / 255
         brightened_img = brightened_img.flatten()
 
         self.network.load_data(brightened_img)
@@ -52,7 +58,7 @@ if __name__ == '__main__':
 
     bgcolor = 'black'
     brushcolor = 'white'
-    brush_radius = 7
+    brush_radius = 5
 
     network_obj_path = './network.pkl'
 

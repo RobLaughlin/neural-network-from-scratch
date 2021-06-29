@@ -1,3 +1,4 @@
 data/images/*
 data/testdata/images*
 __pycache__/
+dist/

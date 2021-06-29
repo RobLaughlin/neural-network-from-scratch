@@ -37,8 +37,8 @@ class CustomCanvas(tkinter.Canvas):
         brightened_img = np.array(grayscale_img)
         brightened_img[brightened_img > 0] = 255
 
-        im = Image.fromarray(brightened_img)
-        im.save('test.png')
+        #im = Image.fromarray(brightened_img)
+        #im.save('test.png')
 
         brightened_img = brightened_img.astype(np.float64) / 255
         brightened_img = brightened_img.flatten()

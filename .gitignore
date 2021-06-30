@@ -3,3 +3,5 @@ data/testdata/images*
 __pycache__/
 dist/
 dist.zip
+images/
+./network.pkl

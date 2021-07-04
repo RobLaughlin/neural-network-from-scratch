@@ -141,7 +141,7 @@ class NeuralNetwork:
         self.layers[0].update_values(X)
         self.feed_forward()
     
-    def SGD(self, training_data: list, test_data: list, mini_batches: int, eta, epochs: int = 10, save_path='./network.pkl'):
+    def SGD(self, training_data: list, mini_batches: int, eta: float, epochs: int = 10, save_path='./network.pkl', mini_batch_callback=None, epoch_callback=None):
         """
         Training data is a list of size T where
         T ~ is the total number of training examples.
@@ -162,7 +162,8 @@ class NeuralNetwork:
         for e in range(epochs):
             random.shuffle(training_data)
             total_samples = len(training_data)
-
+            
+            # ptr is used to set a stride for each batch in our training data
             for ptr in range(total_samples // mini_batches):
 
                 batch = training_data[ptr*m : (ptr+1)*m]
@@ -173,13 +174,16 @@ class NeuralNetwork:
                 
                 for L in self.layers[1:]:
                     L.gradient_step(eta, m)
-            
-            correct, tests = self.test_predictions(test_data)
-            print("Epoch: {0} ~ {1}/{2} correct predictions ({3:.2f}%).".format(e, correct, tests, correct / tests * 100))
 
+                if mini_batch_callback is not None:
+                    mini_batch_callback(self, e, batch)
             
-        print('Done training! Saving network object...')
-        NeuralNetwork.save_network_object(self, save_path)
+            if epoch_callback is not None:
+                epoch_callback(self, e, batch)
+
+        if save_path is not None:
+            print('Done training! Saving network object...')
+            NeuralNetwork.save_network_object(self, save_path)
     
     @staticmethod
     def save_network_object(network, save_path: str = './network.pkl'):
@@ -202,34 +206,6 @@ class NeuralNetwork:
         max_output_neuron = output_layer[mon_i]
         
         return (max_output_neuron, mon_i)
-
-    def test_predictions(self, test_data: np.array):
-        """
-        Returns a ratio of correct predictions to tested predictions.
-
-        Test data is a list of size T where
-        T ~ is the total number of test examples.
-
-        For each test example, we want
-        T[0] ~ to be the input vector for our first training example, and
-        T[1] ~ to be the expected output vector for our cost function.
-        """
-
-        random.shuffle(test_data)
-
-        correct = 0
-        tested = 0
-        for T in test_data:
-            X, Y = T[0], T[1]
-            self.load_data(X, Y)
-            _, predicted_index = self.predict()
-
-            if Y[predicted_index] == 1:
-                correct += 1
-            
-            tested += 1
-        
-        return (correct, tested)
     
     def cost(self):
         last_layer = self.layers[-1]

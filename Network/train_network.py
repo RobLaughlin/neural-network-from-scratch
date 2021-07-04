@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import numpy as np
 from Network.network import NeuralNetwork, reLU, d_reLU, sigmoid, d_sigmoid
 from Network.DataParser.data_parser import DataParser, ImageData, LabelData
-import pickle
+import random
 
 def format_image_data(imgdata:ImageData, index, scaledown):
     # Just pick 1 of the RGB values, it's grayscale so it doesn't matter which one.
@@ -35,11 +35,39 @@ def generate_training_examples(imgdata: ImageData, labeldata: LabelData, scaledo
     
     return training_examples
 
+def test_predictions(network, epoch, test_data: np.array):
+    """
+    Returns a ratio of correct predictions to tested predictions.
+
+    Test data is a list of size T where
+    T ~ is the total number of test examples.
+
+    For each test example, we want
+    T[0] ~ to be the input vector for our first training example, and
+    T[1] ~ to be the expected output vector for our cost function.
+    """
+
+    random.shuffle(test_data)
+
+    correct = 0
+    tested = 0
+    for T in test_data:
+        X, Y = T[0], T[1]
+        network.load_data(X, Y)
+        _, predicted_index = network.predict()
+
+        if Y[predicted_index] == 1:
+            correct += 1
+        
+        tested += 1
+    
+    print("Epoch: {0} ~ {1}/{2} correct predictions ({3:.2f}%).".format(epoch, correct, tested, correct / tested * 100))
+
 if __name__ == '__main__':
     scaledown = 255
     mini_batch_size = 15
     eta = 0.7
-    epochs = 10
+    epochs = 5
     num_outputs = 10
 
     # Training data
@@ -65,4 +93,7 @@ if __name__ == '__main__':
     ])
     
     network = NeuralNetwork(layers=layers)
-    network.SGD(training_examples, test_training_examples, mini_batches=mini_batch_size, eta=eta, epochs=epochs)
+    network.SGD(
+        training_examples, mini_batches=mini_batch_size, eta=eta, epochs=epochs, 
+        epoch_callback=lambda network, epoch, batch, test=test_predictions, testdata=test_training_examples: test(network, epoch, testdata)
+    )

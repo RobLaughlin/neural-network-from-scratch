@@ -5,8 +5,6 @@ from math import pi
 from itertools import repeat
 
 fig, ax = plt.subplots()
-ax.plot()
-plt.pause(2)
 
 def update_title(epoch: int, mini_batch: int):
     global ax
@@ -47,6 +45,13 @@ if __name__ == '__main__':
     mini_batches = 50
 
     training_examples = list(repeat(expected, num_examples))
+
+    ax.set_ylabel('cos(x)')
+    ax.set_xlabel('-2pi to 2pi')
+    ax.set_title("Epoch: 0 ~ Mini batch: 0")
+    ax.plot(inputs, outputs, 'k--')
+    plt.pause(30)
+
     network = NeuralNetwork(layers=layers)
     network.SGD(
         training_examples, mini_batches=mini_batches, eta=eta, epochs=epochs, 

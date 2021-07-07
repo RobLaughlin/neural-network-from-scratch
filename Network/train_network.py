@@ -37,8 +37,6 @@ def generate_training_examples(imgdata: ImageData, labeldata: LabelData, scaledo
 
 def test_predictions(network, epoch, test_data: np.array):
     """
-    Returns a ratio of correct predictions to tested predictions.
-
     Test data is a list of size T where
     T ~ is the total number of test examples.
 
@@ -95,5 +93,6 @@ if __name__ == '__main__':
     network = NeuralNetwork(layers=layers)
     network.SGD(
         training_examples, mini_batches=mini_batch_size, eta=eta, epochs=epochs, 
-        epoch_callback=lambda network, epoch, batch, test=test_predictions, testdata=test_training_examples: test(network, epoch, testdata)
+        epoch_callback=lambda network, epoch, batch, test=test_predictions, testdata=test_training_examples: test(network, epoch, testdata),
+        save_path='./network.pkl'
     )

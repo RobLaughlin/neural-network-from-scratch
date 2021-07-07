@@ -141,7 +141,7 @@ class NeuralNetwork:
         self.layers[0].update_values(X)
         self.feed_forward()
     
-    def SGD(self, training_data: list, mini_batches: int, eta: float, epochs: int = 10, save_path='./network.pkl', mini_batch_callback=None, epoch_callback=None):
+    def SGD(self, training_data: list, mini_batches: int, eta: float, epochs: int = 10, save_path=None, mini_batch_callback=None, epoch_callback=None):
         """
         Training data is a list of size T where
         T ~ is the total number of training examples.
@@ -176,10 +176,10 @@ class NeuralNetwork:
                     L.gradient_step(eta, m)
 
                 if mini_batch_callback is not None:
-                    mini_batch_callback(self, e, batch)
+                    mini_batch_callback(self, e, ptr)
             
             if epoch_callback is not None:
-                epoch_callback(self, e, batch)
+                epoch_callback(self, e, ptr)
 
         if save_path is not None:
             print('Done training! Saving network object...')
